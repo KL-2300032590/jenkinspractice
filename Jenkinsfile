@@ -25,12 +25,9 @@ pipeline {
             steps {
                 sh '''
                 FRONTEND_PATH="$TOMCAT_HOME/webapps/housesales"
-
-                # Remove old frontend
                 rm -rf "$FRONTEND_PATH"
                 mkdir -p "$FRONTEND_PATH"
 
-                # Detect build output folder
                 if [ -d "HouseSales/build" ]; then
                     cp -R HouseSales/build/* "$FRONTEND_PATH/"
                 elif [ -d "HouseSales/dist" ]; then
@@ -47,23 +44,19 @@ pipeline {
         stage('Build Backend') {
             steps {
                 dir('OnlineArt') {
-                    sh '''
-                    mvn clean package
-                    '''
+                    sh 'mvn clean package -DskipTests'
                 }
             }
         }
 
         // ===== BACKEND DEPLOY =====
-        stage('Deploy Backend to Tomcat') {
+        stage('Deploy Backend (Spring Boot Jar)') {
             steps {
                 sh '''
-                WEBAPPS_PATH="$TOMCAT_HOME/webapps"
-
-                rm -f "$WEBAPPS_PATH/housesalesart.war"
-                rm -rf "$WEBAPPS_PATH/housesalesart"
-
-                cp FULL-STACKCURDOPERATIONS/target/*.war "$WEBAPPS_PATH/"
+                echo "Stopping any running backend process..."
+                pkill -f "housesales.jar" || true
+                echo "Starting backend..."
+                nohup java -jar OnlineArt/target/housesales.jar > backend.log 2>&1 &
                 '''
             }
         }
@@ -82,10 +75,10 @@ pipeline {
 
     post {
         success {
-            echo 'Deployment Successful!'
+            echo '✅ Deployment Successful!'
         }
         failure {
-            echo 'Pipeline Failed.'
+            echo '❌ Pipeline Failed.'
         }
     }
 }

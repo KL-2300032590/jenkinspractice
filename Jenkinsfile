@@ -54,9 +54,9 @@ pipeline {
             steps {
                 sh '''
                 echo "Stopping any running backend process..."
-                pkill -f "housesales.jar" || true
+                pkill -f "house.jar" || true
                 echo "Starting backend..."
-                nohup java -jar OnlineArt/target/housesales.jar > backend.log 2>&1 &
+                nohup java -jar OnlineArt/target/house.jar > backend.log 2>&1 &
                 '''
             }
         }
